@@ -1,0 +1,90 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/main_vertical_margin"
+    android:paddingLeft="@dimen/main_horizontal_margin"
+    android:paddingRight="@dimen/main_horizontal_margin"
+    android:paddingTop="@dimen/main_vertical_margin"
+	android:background="@color/background"
+    tools:context="com.minsanity.minstachat.MainActivity" >
+	
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Connect to a chat server"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:textColor="@color/title"
+        android:textSize="26sp" />
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Nickname:"
+        android:textColor="@color/label"
+        android:layout_marginTop="20dp"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <EditText
+        android:id="@+id/nickname"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/background_textbox"
+        android:ems="10"
+        android:hint="minsanity"
+        android:padding="@dimen/main_vertical_margin"
+        android:textColor="@color/label"
+        android:textSize="24sp" />
+    
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Host Address:"
+        android:textColor="@color/label"
+        android:layout_marginTop="13dp"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <EditText
+        android:id="@+id/address"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/background_textbox"
+        android:ems="10"
+        android:hint="192.168.1.2"
+        android:padding="@dimen/main_vertical_margin"
+        android:textColor="@color/label"
+        android:textSize="24sp" />
+    
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Port:"
+        android:textColor="@color/label"
+        android:layout_marginTop="13dp"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <EditText
+        android:id="@+id/port"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/background_textbox"
+        android:ems="10"
+        android:hint="5678"
+        android:padding="@dimen/main_vertical_margin"
+        android:textColor="@color/label"
+        android:textSize="24sp" />
+
+    <Button
+        android:id="@+id/connect"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:padding="@dimen/main_vertical_margin"
+        android:text="Connect" />
+
+</LinearLayout>
