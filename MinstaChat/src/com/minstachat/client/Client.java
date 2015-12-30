@@ -79,7 +79,7 @@ public class Client extends JFrame {
 		if(connection){
 			running = true;
 			console("**********Successfully Connected!**********", 4);
-			console("<" + name + "> has logged in to " + address + ":" + port, 0);
+			console("<SERVER> <" + name + "> has logged in to " + address + ":" + port, 1);
 			try {
 				isr = new InputStreamReader(socket.getInputStream());
 				inputStream = new BufferedReader(isr);
@@ -270,29 +270,18 @@ public class Client extends JFrame {
 	
 	private void printUserMessage(String message){
 		if(message.equals(null)) return;
-		int start = message.indexOf("<");
-		int end = message.indexOf(">");
-		if(start == -1 || end == -1){ //received a whisper
-			lastWhisper = message;
-			try{
-				doc.insertString(doc.getLength(), message + "\n", keyword_whisperFrom);
-				txtHistory.setCaretPosition(txtHistory.getDocument().getLength());
-			}
-			catch(Exception e){
-				e.printStackTrace();
-			}
-		}
-		else{
-			String name = message.substring(start, end + 1);
-			String msg = message.substring(end + 1);
-			try{
-				doc.insertString(doc.getLength(), name + " ", keyword_name);
-				doc.insertString(doc.getLength(), msg + "\n", keyword_msg);
-				txtHistory.setCaretPosition(txtHistory.getDocument().getLength());
-			}
-			catch(Exception e){
-				e.printStackTrace();
-			}
+		int start = message.indexOf(">") + 1;
+		int startName = message.indexOf("<", start);
+		int endName = message.indexOf(">", startName);
+		
+		String name = message.substring(startName, endName + 1);
+		String msg = message.substring(endName + 1);
+		try {
+			doc.insertString(doc.getLength(), name + " ", keyword_name);
+			doc.insertString(doc.getLength(), msg + "\n", keyword_msg);
+			txtHistory.setCaretPosition(txtHistory.getDocument().getLength());
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -325,10 +314,12 @@ public class Client extends JFrame {
 	
 	private void printAdminMessage(String message){
 		if(message.equals(null)) return;
-		int start = message.indexOf("<");
-		int end = message.indexOf(">");
-		String name = message.substring(start, end + 1);
-		String msg = message.substring(end + 1);
+		int start = message.indexOf(">") + 1;
+		int startName = message.indexOf("<", start);
+		int endName = message.indexOf(">", startName);
+		
+		String name = message.substring(startName, endName + 1);
+		String msg = message.substring(endName + 1);
 		try{
 			doc.insertString(doc.getLength(), name + " ", keyword_admin);
 			doc.insertString(doc.getLength(), msg + "\n", keyword_msg);
@@ -341,12 +332,24 @@ public class Client extends JFrame {
 	
 	private void printWhisper(String message){
 		if(message.equals(null)) return;
-		try{
-			doc.insertString(doc.getLength(), message + "\n", keyword_whisperTo);
-			txtHistory.setCaretPosition(txtHistory.getDocument().getLength());
-		}
-		catch(Exception e){
-			e.printStackTrace();
+		int startIndex = message.indexOf(">") + 2;
+		if(message.indexOf("You") == startIndex){
+			try{
+				doc.insertString(doc.getLength(), message.substring(startIndex) + "\n", keyword_whisperTo);
+				txtHistory.setCaretPosition(txtHistory.getDocument().getLength());
+			}
+			catch(Exception e){
+				e.printStackTrace();
+			}
+		}else{
+			lastWhisper = message.substring(startIndex);
+			try{
+				doc.insertString(doc.getLength(), message.substring(startIndex) + "\n", keyword_whisperFrom);
+				txtHistory.setCaretPosition(txtHistory.getDocument().getLength());
+			}
+			catch(Exception e){
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -367,25 +370,16 @@ public class Client extends JFrame {
 	}
 	
 	public void sendMessage(String message){
-		if(message.trim().equals("")) return; //Validates message
-		if(getMessageType(message).equals("message")){
-		send(message); //sends message to server
-		console("<" + name + "> " + message, 0); //displays message on chat history
-		txtMessage.setText(""); //clears textbox
-		txtMessage.requestFocusInWindow(); //focuses textbox
-		}
-		else if(getMessageType(message).equals("pm")){
+		if(message.trim().equals("")) return;
+		
+		if(getMessageType(message).equals("pm")){
 			send(message);
 			txtMessage.setText("");
-			txtMessage.requestFocusInWindow(); //focuses textbox
-		}
-		else if(getMessageType(message).equals("userlist")){
-			getUserList(message);
-		}
-		else if(getMessageType(message).equals("command")){ //type: command
+			txtMessage.requestFocusInWindow();
+		}else if(getMessageType(message).equals("command")){ //type: command
 			send(message);
 			txtMessage.setText("");
-			txtMessage.requestFocusInWindow(); //focuses textbox
+			txtMessage.requestFocusInWindow();
 			int index = message.indexOf(" ");
 			if(index > 0){
 				String command = message.substring(1, index);
@@ -402,6 +396,11 @@ public class Client extends JFrame {
 			else{
 				console("<COMMAND> " + message.substring(1) + " requested to server.", 4);
 			}
+		}else{
+			send(message);
+			console("<USERMESSAGE> <" + name + "> " + message, 0);
+			txtMessage.setText("");
+			txtMessage.requestFocusInWindow();
 		}
 	}
 	
@@ -442,7 +441,8 @@ public class Client extends JFrame {
 		if(msg.startsWith("@")) return "pm";
 		if(msg.startsWith("/")) return "command";
 		if(msg.startsWith("|") && msg.endsWith("|")) return "userlist";
-		if(msg.startsWith("You")) return "whisper";
+		if(msg.startsWith("<USERMESSAGE>")) return "message";
+		if(msg.startsWith("<WHISPER>")) return "whisper";
 		if(msg.startsWith("<SERVER>")) return "server";
 		if(msg.startsWith("<ADMIN>")) return "admin";
 		return "message";

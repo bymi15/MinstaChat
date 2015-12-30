@@ -8,7 +8,6 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-
 import android.app.Activity;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -89,7 +88,7 @@ public class ChatActivity extends Activity{
 		boolean connection = openConnection(address, port);
 		if(connection){
 			running = true;
-			console("**********Successfully Connected!**********", 4);
+			console("Successfully Connected!", 4);
 			console(nickname + " has logged in to " + address + ":" + port, 4);
 			try {
 				isr = new InputStreamReader(socket.getInputStream());
@@ -130,33 +129,25 @@ public class ChatActivity extends Activity{
 	
 	private void printUserMessage(String message){
 		if(message.equals(null)) return;
-		int start = message.indexOf("<");
-		int end = message.indexOf(">");
+		int start = message.indexOf(">") + 1;
+		int startName = message.indexOf("<", start);
+		int endName = message.indexOf(">", startName);
 		
-		if(start == -1 || end == -1){ //received a whisper
-			String name = message.substring(0, message.indexOf(":"));
-			String msg = message.substring(message.indexOf(":") + 1);
-			Message m = new Message(name, msg, false);
-			listMessages.add(m);
-			adapter.notifyDataSetChanged();
+		String username = message.substring(startName + 1, endName);
+		boolean owner = username.equals(nickname);
+		String msg = message.substring(endName + 1);
+		Message m = new Message(username, msg, owner);
+		listMessages.add(m);
+		adapter.notifyDataSetChanged();
+		if (!owner) {
 			playBeep();
-		}
-		else{
-			String username = message.substring(start+1, end);
-			boolean owner = username.equals(nickname);
-			String msg = message.substring(end + 1);
-			Message m = new Message(username, msg, owner);
-			listMessages.add(m);
-			adapter.notifyDataSetChanged();
-			if(!owner){
-				playBeep();
-			}
 		}
 	}
 	
 	private void printCommand(String message){
 		if(message.equals(null)) return;
 		Message m = new Message("<SERVER>", message, false);
+		m.setServer(true);
 		listMessages.add(m);
 		adapter.notifyDataSetChanged();
 		playBeep();
@@ -169,6 +160,7 @@ public class ChatActivity extends Activity{
 		String name = message.substring(start, end + 1);
 		String msg = message.substring(end + 1);
 		Message m = new Message(name, msg, false);
+		m.setServer(true);
 		listMessages.add(m);
 		adapter.notifyDataSetChanged();
 		playBeep();
@@ -188,10 +180,13 @@ public class ChatActivity extends Activity{
 	
 	private void printWhisper(String message){
 		if(message.equals(null)) return;
-		boolean owner = message.startsWith("You");
-		String fromName = message.substring(0, message.indexOf(":"));
+		int startIndex = message.indexOf(">") + 2;
+		boolean owner = message.indexOf("You") == startIndex;
+		
+		String fromName = message.substring(startIndex, message.indexOf(":"));
 		String msg = message.substring(message.indexOf(":") + 1);
 		Message m = new Message(fromName, msg, owner);
+		m.setWhisper(true);
 		listMessages.add(m);
 		adapter.notifyDataSetChanged();
 		playBeep();
@@ -220,26 +215,18 @@ public class ChatActivity extends Activity{
 	}
 	
 	public void sendMessage(String message){
-		if(message.trim().equals("")) return; //Validates message
-		if(getMessageType(message).equals("message")){
-		send(message); //sends message to server
-		console("<" + nickname + "> " + message, 0); //displays message on chat history
-		txtMessage.setText(""); //clears textbox
-		}
-		else if(getMessageType(message).equals("pm")){
+		if(message.trim().equals("")) return;
+		
+		if(getMessageType(message).equals("pm")){
 			send(message);
 			txtMessage.setText("");
-		}
-		else if(getMessageType(message).equals("userlist")){
-			getUserList(message);
-		}
-		else if(getMessageType(message).equals("command")){ //type: command
+		}else if(getMessageType(message).equals("command")){ //type: command
 			send(message);
 			txtMessage.setText("");
 			int index = message.indexOf(" ");
 			if(index > 0){
 				String command = message.substring(1, index);
-				console("<COMMAND> " + command + " requested.", 4);
+				console("<COMMAND> " + command + " requested to server.", 4);
 				if(command.equals("logout")){
 					finish();
 				}
@@ -250,6 +237,10 @@ public class ChatActivity extends Activity{
 			else{
 				console("<COMMAND> " + message.substring(1) + " requested to server.", 4);
 			}
+		}else{
+			send(message);
+			console("<USERMESSAGE> <" + nickname + "> " + message, 0);
+			txtMessage.setText("");
 		}
 	}
 	
@@ -308,7 +299,8 @@ public class ChatActivity extends Activity{
 		if(msg.startsWith("@")) return "pm";
 		if(msg.startsWith("/")) return "command";
 		if(msg.startsWith("|") && msg.endsWith("|")) return "userlist";
-		if(msg.startsWith("You")) return "whisper";
+		if(msg.startsWith("<USERMESSAGE>")) return "message";
+		if(msg.startsWith("<WHISPER>")) return "whisper";
 		if(msg.startsWith("<SERVER>")) return "server";
 		if(msg.startsWith("<ADMIN>")) return "admin";
 		return "message";
@@ -368,6 +360,7 @@ public class ChatActivity extends Activity{
     
     @Override
     public void onDestroy(){
+    	super.onDestroy();
     	try {
 			running = false;
 			listenThread.interrupt();

@@ -48,16 +48,21 @@ public class ChatAdapter extends BaseAdapter{
  
         LayoutInflater mInflater = (LayoutInflater) context
                 .getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
- 
-        // Identifying the message owner
-        if (messagesItems.get(position).isOwner()) {
-            // message belongs to you, so load the right aligned layout
-        	view = mInflater.inflate(R.layout.list_item_message_right,
-                    null);
-        } else {
-            // message belongs to other person, load the left aligned layout
-        	view = mInflater.inflate(R.layout.list_item_message_left,
-                    null);
+        
+        if(m.isOwner()) {
+        	if(m.isWhisper()){
+            	view = mInflater.inflate(R.layout.list_item_whisper_right, null);
+        	}else{
+        		view = mInflater.inflate(R.layout.list_item_message_right, null);        		
+        	}
+        }else{
+        	if(m.isWhisper()){
+        		view = mInflater.inflate(R.layout.list_item_whisper_left, null);
+        	}else if(m.isServer()){
+        		view = mInflater.inflate(R.layout.list_item_server_left, null);
+        	}else{
+        		view = mInflater.inflate(R.layout.list_item_message_left, null);        		
+        	}
         }
  
         TextView lblFrom = (TextView) view.findViewById(R.id.lblMsgFrom);

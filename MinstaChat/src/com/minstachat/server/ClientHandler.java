@@ -36,7 +36,7 @@ public class ClientHandler extends Thread{
 				this.clientName = username;
 				ServerCLI.console(" <" + username + "> has logged in.");
 				sendOnlineUsers(); //Sends string containing online users to every client
-				sendMessage("<SERVER> " + username + " has logged in.");
+				sendMessage("<SERVER> <" + username + "> has logged in.");
 			} 
 			else {
 				this.outputStream.println("<SERVER> Sorry! You cannot connect due to an already existing username.");
@@ -60,7 +60,7 @@ public class ClientHandler extends Thread{
 							clients.remove(i); //remove client from list
 							ServerCLI.console(" <" + username + "> has logged out.");
 							sendOnlineUsers(); //Sends string containing online users to every client
-							sendMessage("<SERVER> " + username + " has logged out.");
+							sendMessage("<SERVER> <" + username + "> has logged out.");
 							
 							disconnect();
 							clientSocket.close();
@@ -71,7 +71,7 @@ public class ClientHandler extends Thread{
 					}
 				}
 				if(flag.equals("message")){ //if the data received is a message
-					sendMessage("<"+ username + "> " + message);
+					sendMessage("<USERMESSAGE> <"+ username + "> " + message);
 					ServerCLI.console(" <"+ username + "> " + message);
 				}
 				if(flag.equals("pm")){ //if the data received is a private message
@@ -81,14 +81,14 @@ public class ClientHandler extends Thread{
 						boolean found = false;
 						for(int i = 0; i < maxClients; i++){
 							if(t[i] != null && t[i] != this && t[i].clientName.equals(recipient) && !t[i].clientName.equals(username)){
-								t[i].outputStream.println(username + " whispered to you: " + msg);
-								this.outputStream.println("You whispered to " + recipient + ": " + msg); //echo to current client
+								t[i].outputStream.println("<WHISPER> " + username + " whispered to you: " + msg);
+								this.outputStream.println("<WHISPER> You whispered to " + recipient + ": " + msg); //echo to current client
 								found = true;
 								break; //breaks for loop
 							}
 						}
 						if(!found) {
-							this.outputStream.println("Could not whisper to: " + recipient + ", please try again.");
+							this.outputStream.println("<SERVER> Could not whisper to: " + recipient + ", please try again.");
 						}
 					}
 				}
